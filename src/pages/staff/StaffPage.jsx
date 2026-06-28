@@ -151,7 +151,7 @@ export default function StaffPage() {
                           <button
                             type="button"
                             onClick={() => handleEdit(member)}
-                            className="p-1.5 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                            className="p-2 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
                             title="Edit"
                           >
                             <Pencil className="h-4 w-4" />
@@ -161,7 +161,7 @@ export default function StaffPage() {
                           <button
                             type="button"
                             onClick={() => setDeleteTarget(member)}
-                            className="p-1.5 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                            className="p-2 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
                             title="Remove"
                           >
                             <Trash2 className="h-4 w-4" />

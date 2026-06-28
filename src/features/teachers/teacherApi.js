@@ -16,7 +16,7 @@ export const teacherApi = baseApi.injectEndpoints({
     }),
     updateTeacher: builder.mutation({
       query: ({ id, ...body }) => ({ url: `/teachers/${id}`, method: 'PUT', body }),
-      invalidatesTags: (_r, _e, { id }) => ['Teachers', { type: 'Teachers', id }],
+      invalidatesTags: (_r, _e, { id }) => ['Teachers', { type: 'Teachers', id }, 'Salary'],
     }),
     deleteTeacher: builder.mutation({
       query: (id) => ({ url: `/teachers/${id}`, method: 'DELETE' }),

@@ -8,11 +8,11 @@ export const staffApi = baseApi.injectEndpoints({
     }),
     createStaff: builder.mutation({
       query: (body) => ({ url: '/staff', method: 'POST', body }),
-      invalidatesTags: ['Staff'],
+      invalidatesTags: ['Staff', 'Salary'],
     }),
     updateStaff: builder.mutation({
       query: ({ id, ...body }) => ({ url: `/staff/${id}`, method: 'PUT', body }),
-      invalidatesTags: ['Staff'],
+      invalidatesTags: ['Staff', 'Salary'],
     }),
     deleteStaff: builder.mutation({
       query: (id) => ({ url: `/staff/${id}`, method: 'DELETE' }),

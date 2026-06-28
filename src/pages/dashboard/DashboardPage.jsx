@@ -121,6 +121,12 @@ export default function DashboardPage() {
 
   const currentMonth = new Date().toLocaleString('en-BD', { month: 'long', year: 'numeric' })
 
+  const permissions   = new Set(user?.permissions ?? [])
+  const canViewFinance     = permissions.has('reports.financial') || user?.roles?.includes('owner')
+  const canViewFees        = permissions.has('fees.view')
+  const canViewAttendance  = permissions.has('attendance.view')
+  const canViewExams       = permissions.has('exams.view')
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -177,52 +183,65 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* ── Row 2: Monthly Finances ─────────────────────────────────────────── */}
-      <div>
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-          Finances — {currentMonth}
-        </p>
-        {isLoading ? (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="bg-white rounded-xl border border-gray-200 p-5 h-24 animate-pulse" />
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard
-              icon={DollarSign} label="Month Income"
-              value={formatCurrency(d?.month_collections ?? 0)}
-              sub={`Today: ${formatCurrency(d?.today_collections ?? 0)}`}
-              color="green"
-              onClick={() => navigate('/fees')}
-            />
-            <StatCard
-              icon={TrendingDown} label="Month Expenses"
-              value={formatCurrency((d?.month_expenses ?? 0) + (d?.month_salary ?? 0))}
-              sub={`Salary ${formatCurrency(d?.month_salary ?? 0)} + Other ${formatCurrency(d?.month_expenses ?? 0)}`}
-              color="rose"
-              onClick={() => navigate('/expenses')}
-            />
-            <NetProfitCard
-              value={d?.month_net ?? 0}
-              month={new Date().toLocaleString('en-BD', { month: 'short' })}
-            />
-            <StatCard
-              icon={AlertCircle} label="Outstanding Dues"
-              value={formatCurrency(d?.outstanding_amount ?? 0)}
-              sub={`${d?.outstanding_dues ?? 0} pending records`}
-              color="red"
-              onClick={() => navigate('/fees')}
-            />
-          </div>
-        )}
-      </div>
+      {/* ── Row 2: Monthly Finances (financial roles only) ──────────────────── */}
+      {(canViewFinance || canViewFees) && (
+        <div>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+            Finances — {currentMonth}
+          </p>
+          {isLoading ? (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {Array.from({ length: canViewFinance ? 4 : 1 }).map((_, i) => (
+                <div key={i} className="bg-white rounded-xl border border-gray-200 p-5 h-24 animate-pulse" />
+              ))}
+            </div>
+          ) : canViewFinance ? (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <StatCard
+                icon={DollarSign} label="Month Income"
+                value={formatCurrency(d?.month_collections ?? 0)}
+                sub={`Today: ${formatCurrency(d?.today_collections ?? 0)}`}
+                color="green"
+                onClick={() => navigate('/fees')}
+              />
+              <StatCard
+                icon={TrendingDown} label="Month Expenses"
+                value={formatCurrency((d?.month_expenses ?? 0) + (d?.month_salary ?? 0))}
+                sub={`Salary ${formatCurrency(d?.month_salary ?? 0)} + Other ${formatCurrency(d?.month_expenses ?? 0)}`}
+                color="rose"
+                onClick={() => navigate('/expenses')}
+              />
+              <NetProfitCard
+                value={d?.month_net ?? 0}
+                month={new Date().toLocaleString('en-BD', { month: 'short' })}
+              />
+              <StatCard
+                icon={AlertCircle} label="Outstanding Dues"
+                value={formatCurrency(d?.outstanding_amount ?? 0)}
+                sub={`${d?.outstanding_dues ?? 0} pending records`}
+                color="red"
+                onClick={() => navigate('/fees')}
+              />
+            </div>
+          ) : (
+            /* Receptionist: today's collection only */
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <StatCard
+                icon={DollarSign} label="Today's Collections"
+                value={formatCurrency(d?.today_collections ?? 0)}
+                color="green"
+                onClick={() => navigate('/fees')}
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── Row 3: Trend chart + Upcoming exams ────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-        {/* 6-month trend chart */}
+        {/* 6-month trend chart (financial roles only) */}
+        {canViewFinance && (
         <div className="bg-white rounded-xl border border-gray-200">
           <SectionHeader
             title="6-Month Income vs Costs"
@@ -260,9 +279,10 @@ export default function DashboardPage() {
             )}
           </div>
         </div>
+        )}
 
-        {/* Upcoming exams */}
-        <div className="bg-white rounded-xl border border-gray-200">
+        {/* Upcoming exams (roles with exams.view) */}
+        {canViewExams && <div className="bg-white rounded-xl border border-gray-200">
           <SectionHeader
             title="Upcoming Exams"
             linkLabel="All exams"
@@ -318,11 +338,11 @@ export default function DashboardPage() {
               </table>
             </div>
           )}
-        </div>
+        </div>}
       </div>
 
-      {/* ── Row 4: Recent Collections ───────────────────────────────────────── */}
-      <div className="bg-white rounded-xl border border-gray-200">
+      {/* ── Row 4: Recent Collections (financial roles only) ────────────────── */}
+      {canViewFinance && <div className="bg-white rounded-xl border border-gray-200">
         <SectionHeader
           title="Recent Collections"
           linkLabel="View all"
@@ -371,7 +391,7 @@ export default function DashboardPage() {
             </table>
           </div>
         )}
-      </div>
+      </div>}
     </div>
   )
 }

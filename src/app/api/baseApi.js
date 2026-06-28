@@ -11,6 +11,6 @@ export const baseApi = createApi({
       return headers
     },
   }),
-  tagTypes: ['Auth', 'Students', 'Batches', 'Attendance', 'Fees', 'Teachers', 'Salary', 'Reports', 'Staff', 'Branches', 'Subjects', 'ExamTypes', 'GradeScales', 'Exams', 'ExamResults', 'ExpenseCategories', 'Expenses', 'Roles'],
+  tagTypes: ['Auth', 'Students', 'Batches', 'Attendance', 'Fees', 'Teachers', 'Salary', 'Reports', 'Staff', 'Branches', 'Subjects', 'ExamTypes', 'GradeScales', 'Exams', 'ExamResults', 'ExpenseCategories', 'Expenses', 'Roles', 'Plans', 'Subscription'],
   endpoints: () => ({}),
 })

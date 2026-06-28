@@ -8,9 +8,12 @@ import {
   useDeleteExpenseMutation,
 } from '@/features/expenses/expenseApi'
 import { useGetExpenseCategoriesQuery } from '@/features/expenseCategories/expenseCategoryApi'
-import { useGetBatchesQuery } from '@/features/batches/batchApi'
+import { useGetBranchesQuery } from '@/features/branches/branchApi'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
+import { Input } from '@/components/ui/Input'
+import { Select } from '@/components/ui/Select'
+import { Pagination } from '@/components/ui/Pagination'
 import { formatCurrency } from '@/utils/formatCurrency'
 import { formatDate } from '@/utils/formatDate'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
@@ -103,90 +106,69 @@ function ExpenseModal({ expense, categories, branches, onClose }) {
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
-            <input
-              value={form.title}
-              onChange={e => set('title', e.target.value)}
-              placeholder="e.g. Office Rent - June"
-              className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.title ? 'border-red-400' : 'border-gray-300'}`}
+          <Input
+            label="Title *"
+            value={form.title}
+            onChange={e => set('title', e.target.value)}
+            placeholder="e.g. Office Rent - June"
+            error={errors.title}
+          />
+
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              label="Amount (৳) *"
+              type="number"
+              min="0.01"
+              step="0.01"
+              value={form.amount}
+              onChange={e => set('amount', e.target.value)}
+              placeholder="0.00"
+              error={errors.amount}
             />
-            {errors.title && <p className="text-xs text-red-500 mt-1">{errors.title}</p>}
+            <Input
+              label="Date *"
+              type="date"
+              value={form.expense_date}
+              onChange={e => set('expense_date', e.target.value)}
+              error={errors.expense_date}
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Amount (৳) *</label>
-              <input
-                type="number"
-                min="0.01"
-                step="0.01"
-                value={form.amount}
-                onChange={e => set('amount', e.target.value)}
-                placeholder="0.00"
-                className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.amount ? 'border-red-400' : 'border-gray-300'}`}
-              />
-              {errors.amount && <p className="text-xs text-red-500 mt-1">{errors.amount}</p>}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Date *</label>
-              <input
-                type="date"
-                value={form.expense_date}
-                onChange={e => set('expense_date', e.target.value)}
-                className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.expense_date ? 'border-red-400' : 'border-gray-300'}`}
-              />
-              {errors.expense_date && <p className="text-xs text-red-500 mt-1">{errors.expense_date}</p>}
-            </div>
+            <Select
+              label="Category"
+              value={form.expense_category_id}
+              onChange={e => set('expense_category_id', e.target.value)}
+            >
+              <option value="">Uncategorized</option>
+              {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </Select>
+            <Select
+              label="Payment Method"
+              value={form.payment_method}
+              onChange={e => set('payment_method', e.target.value)}
+            >
+              {Object.entries(PAYMENT_LABELS).map(([v, l]) => (
+                <option key={v} value={v}>{l}</option>
+              ))}
+            </Select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-              <select
-                value={form.expense_category_id}
-                onChange={e => set('expense_category_id', e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Uncategorized</option>
-                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
-              <select
-                value={form.payment_method}
-                onChange={e => set('payment_method', e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {Object.entries(PAYMENT_LABELS).map(([v, l]) => (
-                  <option key={v} value={v}>{l}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Branch</label>
-              <select
-                value={form.branch_id}
-                onChange={e => set('branch_id', e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">All / Not specific</option>
-                {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Reference No.</label>
-              <input
-                value={form.reference_no}
-                onChange={e => set('reference_no', e.target.value)}
-                placeholder="Receipt / Invoice no."
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+            <Select
+              label="Branch"
+              value={form.branch_id}
+              onChange={e => set('branch_id', e.target.value)}
+            >
+              <option value="">All / Not specific</option>
+              {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+            </Select>
+            <Input
+              label="Reference No."
+              value={form.reference_no}
+              onChange={e => set('reference_no', e.target.value)}
+              placeholder="Receipt / Invoice no."
+            />
           </div>
 
           <div>
@@ -224,10 +206,10 @@ export default function ExpensesPage() {
   const params = { ...Object.fromEntries(Object.entries(filters).filter(([, v]) => v)), page }
   const { data, isLoading, isFetching } = useGetExpensesQuery(params)
   const { data: categoriesData } = useGetExpenseCategoriesQuery()
-  const { data: branchesData }   = useGetBatchesQuery({ per_page: 100 })  // reuse batches for branches
-  const { data: branchesRes }    = { data: null }  // placeholder — we'll use BranchesAPI if available
+  const { data: branchesData }   = useGetBranchesQuery()
 
   const categories = categoriesData?.data ?? []
+  const branches   = branchesData?.data   ?? []
   const rows       = data?.data           ?? []
   const meta       = data?.meta           ?? {}
 
@@ -348,14 +330,14 @@ export default function ExpensesPage() {
                       <button
                         type="button"
                         onClick={() => setModal(r)}
-                        className="p-1.5 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                        className="p-2 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
                       >
                         <Pencil className="h-3.5 w-3.5" />
                       </button>
                       <button
                         type="button"
                         onClick={() => setDeleteTarget(r)}
-                        className="p-1.5 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                        className="p-2 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
@@ -367,20 +349,9 @@ export default function ExpensesPage() {
           </table>
         </div>
 
-        {/* Pagination */}
         {meta.last_page > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200">
-            <p className="text-sm text-gray-500">
-              Page {meta.current_page} of {meta.last_page} · {meta.total} records
-            </p>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>
-                Previous
-              </Button>
-              <Button variant="outline" size="sm" disabled={page >= meta.last_page} onClick={() => setPage(p => p + 1)}>
-                Next
-              </Button>
-            </div>
+          <div className="px-4 py-3 border-t border-gray-200">
+            <Pagination meta={meta} onPageChange={setPage} />
           </div>
         )}
       </div>
@@ -390,7 +361,7 @@ export default function ExpensesPage() {
         <ExpenseModal
           expense={modal === 'add' ? null : modal}
           categories={categories}
-          branches={[]}
+          branches={branches}
           onClose={() => setModal(null)}
         />
       )}

@@ -44,7 +44,7 @@ export default function ExamDetailPage() {
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="p-1.5 rounded-md text-gray-400 hover:bg-gray-100 transition-colors"
+          className="p-2 rounded-md text-gray-400 hover:bg-gray-100 transition-colors"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>

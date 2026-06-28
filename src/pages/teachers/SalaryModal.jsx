@@ -9,13 +9,15 @@ import { formatCurrency } from '@/utils/formatCurrency'
 import { usePaySalaryMutation } from '@/features/teachers/teacherApi'
 
 export function SalaryModal({ open, onClose, teacher }) {
-  const today = new Date().toISOString().slice(0, 10)
+  const today        = new Date().toISOString().slice(0, 10)
   const currentMonth = new Date().toISOString().slice(0, 7)
 
-  const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm({
+  // base_salary is locked to the employee profile — not part of the form
+  const baseSalary = parseFloat(teacher?.profile?.base_salary ?? 0)
+
+  const { register, handleSubmit, watch, reset, formState: { errors } } = useForm({
     defaultValues: {
       month:          currentMonth,
-      base_salary:    '',
       bonus:          '',
       deduction:      '',
       amount_paid:    '',
@@ -25,22 +27,20 @@ export function SalaryModal({ open, onClose, teacher }) {
     },
   })
 
-  const baseSalary   = parseFloat(watch('base_salary') || 0)
-  const bonus        = parseFloat(watch('bonus') || 0)
-  const deduction    = parseFloat(watch('deduction') || 0)
-  const netSalary    = Math.max(0, baseSalary + bonus - deduction)
+  const bonus      = parseFloat(watch('bonus') || 0)
+  const deduction  = parseFloat(watch('deduction') || 0)
+  const netSalary  = Math.max(0, baseSalary + bonus - deduction)
 
   const [paySalary, { isLoading }] = usePaySalaryMutation()
 
-  // Pre-fill base_salary from teacher profile when modal opens
   useEffect(() => {
     if (!open || !teacher) return
+    const remaining = teacher.remaining ?? baseSalary
     reset({
       month:          currentMonth,
-      base_salary:    teacher.profile?.base_salary ?? '',
       bonus:          '',
       deduction:      '',
-      amount_paid:    teacher.profile?.base_salary ?? '',
+      amount_paid:    remaining > 0 ? remaining : '',
       payment_method: 'cash',
       payment_date:   today,
       note:           '',
@@ -57,7 +57,7 @@ export function SalaryModal({ open, onClose, teacher }) {
       const result = await paySalary({
         user_id:        teacher.id,
         month:          data.month,
-        base_salary:    parseFloat(data.base_salary),
+        base_salary:    baseSalary,           // always from profile, never editable
         bonus:          parseFloat(data.bonus || 0),
         deduction:      parseFloat(data.deduction || 0),
         amount_paid:    parseFloat(data.amount_paid),
@@ -80,6 +80,25 @@ export function SalaryModal({ open, onClose, teacher }) {
   return (
     <Modal open={open} onClose={handleClose} title={`Pay Salary — ${teacher.name}`} size="md">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+
+        {/* Read-only salary summary */}
+        <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 grid grid-cols-3 gap-4 text-sm">
+          <div>
+            <p className="text-xs text-gray-500 mb-0.5">Base Salary</p>
+            <p className="font-semibold text-gray-900">{formatCurrency(baseSalary)}</p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-500 mb-0.5">Net Salary</p>
+            <p className="font-semibold text-gray-900">{formatCurrency(netSalary)}</p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-500 mb-0.5">Remaining</p>
+            <p className="font-semibold text-red-600">
+              {teacher.remaining != null ? formatCurrency(teacher.remaining) : '—'}
+            </p>
+          </div>
+        </div>
+
         <div className="grid grid-cols-2 gap-4">
           <Input
             label="Month"
@@ -88,12 +107,16 @@ export function SalaryModal({ open, onClose, teacher }) {
             error={errors.month?.message}
           />
           <Input
-            label="Base Salary (৳)"
+            label="Amount Paid (৳)"
             type="number"
-            min="0"
+            min="0.01"
             step="0.01"
-            {...register('base_salary', { required: 'Base salary is required', min: { value: 0, message: 'Must be ≥ 0' } })}
-            error={errors.base_salary?.message}
+            {...register('amount_paid', {
+              required:     'Amount paid is required',
+              min:          { value: 0.01, message: 'Amount must be greater than 0' },
+              valueAsNumber: true,
+            })}
+            error={errors.amount_paid?.message}
           />
           <Input
             label="Bonus (৳)"
@@ -113,21 +136,7 @@ export function SalaryModal({ open, onClose, teacher }) {
           />
         </div>
 
-        {/* Net salary display */}
-        <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50 rounded-lg border border-gray-200">
-          <span className="text-sm font-medium text-gray-600">Net Salary</span>
-          <span className="text-lg font-bold text-gray-900">{formatCurrency(netSalary)}</span>
-        </div>
-
         <div className="grid grid-cols-2 gap-4">
-          <Input
-            label="Amount Paid (৳)"
-            type="number"
-            min="0"
-            step="0.01"
-            {...register('amount_paid', { required: 'Amount paid is required', min: { value: 0, message: 'Must be ≥ 0' } })}
-            error={errors.amount_paid?.message}
-          />
           <Select label="Payment Method" {...register('payment_method', { required: true })}>
             <option value="cash">Cash</option>
             <option value="bkash">bKash</option>
@@ -135,21 +144,19 @@ export function SalaryModal({ open, onClose, teacher }) {
             <option value="rocket">Rocket</option>
             <option value="bank_transfer">Bank Transfer</option>
           </Select>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
           <Input
             label="Payment Date"
             type="date"
             {...register('payment_date', { required: 'Payment date is required' })}
             error={errors.payment_date?.message}
           />
-          <Input
-            label="Note (optional)"
-            placeholder="Any remarks…"
-            {...register('note')}
-          />
         </div>
+
+        <Input
+          label="Note (optional)"
+          placeholder="Any remarks…"
+          {...register('note')}
+        />
 
         <div className="flex justify-end gap-3 pt-2">
           <Button type="button" variant="outline" onClick={handleClose}>Cancel</Button>

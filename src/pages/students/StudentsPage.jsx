@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import { UserPlus, Search, Pencil, Trash2, Eye } from 'lucide-react'
+import { UserPlus, Search, Pencil, Trash2, Eye, Users } from 'lucide-react'
 import { useGetStudentsQuery, useDeleteStudentMutation } from '@/features/students/studentApi'
 import { usePermission } from '@/hooks/usePermission'
 import { useDebounce } from '@/hooks/useDebounce'
@@ -11,6 +11,7 @@ import { Select } from '@/components/ui/Select'
 import { Badge } from '@/components/ui/Badge'
 import { Pagination } from '@/components/ui/Pagination'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { StudentFormModal } from './StudentFormModal'
 import { formatDate } from '@/utils/formatDate'
 
@@ -79,16 +80,14 @@ export default function StudentsPage() {
       </div>
 
       <div className="flex items-center gap-3">
-        <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-          <input
-            type="text"
-            placeholder="Search by name, ID, phone…"
-            value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-            className="w-full rounded-md border border-gray-300 pl-9 pr-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-        </div>
+        <Input
+          leftIcon={Search}
+          type="text"
+          placeholder="Search by name, ID, phone…"
+          value={search}
+          onChange={(e) => { setSearch(e.target.value); setPage(1) }}
+          className="max-w-xs"
+        />
         <Select
           value={status}
           onChange={(e) => { setStatus(e.target.value); setPage(1) }}
@@ -123,8 +122,13 @@ export default function StudentsPage() {
                 </tr>
               ) : students.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-12 text-gray-400">
-                    No students found.
+                  <td colSpan={7}>
+                    <EmptyState
+                      icon={Users}
+                      title="No students found"
+                      description={search || status ? 'Try adjusting your filters.' : 'Add your first student to get started.'}
+                      action={!search && !status && canCreate ? { label: 'Add Student', onClick: () => setFormOpen(true) } : undefined}
+                    />
                   </td>
                 </tr>
               ) : (
@@ -173,7 +177,7 @@ export default function StudentsPage() {
                         <button
                           type="button"
                           onClick={() => navigate(`/students/${student.id}`)}
-                          className="p-1.5 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                          className="p-2 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
                           title="View profile"
                         >
                           <Eye className="h-4 w-4" />
@@ -181,7 +185,7 @@ export default function StudentsPage() {
                         <button
                           type="button"
                           onClick={() => handleEdit(student)}
-                          className="p-1.5 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                          className="p-2 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
                           title="Edit"
                         >
                           <Pencil className="h-4 w-4" />
@@ -190,7 +194,7 @@ export default function StudentsPage() {
                           <button
                             type="button"
                             onClick={() => setDeleteTarget(student)}
-                            className="p-1.5 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                            className="p-2 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
                             title="Delete"
                           >
                             <Trash2 className="h-4 w-4" />

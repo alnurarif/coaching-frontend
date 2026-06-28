@@ -1,7 +1,9 @@
 import { useState } from 'react'
-import { DollarSign, CalendarDays, History, AlertCircle, Printer, Loader2 } from 'lucide-react'
+import { DollarSign, CalendarDays, History, AlertCircle, Printer, Loader2, Search } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
+import { Input } from '@/components/ui/Input'
+import { Select } from '@/components/ui/Select'
 import { Pagination } from '@/components/ui/Pagination'
 import { formatCurrency } from '@/utils/formatCurrency'
 import { formatDate } from '@/utils/formatDate'
@@ -125,24 +127,24 @@ export default function FeesPage() {
           {activeTab === 'history' && (
             <div className="space-y-4">
               <div className="flex flex-wrap gap-3">
-                <input
+                <Input
+                  leftIcon={Search}
                   type="text"
                   placeholder="Search by student name or ID…"
                   value={search}
                   onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-72"
+                  className="w-72"
                 />
-                <select
+                <Select
                   value={feeTypeFilter}
                   onChange={(e) => { setFeeTypeFilter(e.target.value); setPage(1) }}
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="All Fee Types"
                 >
-                  <option value="">All Fee Types</option>
                   <option value="monthly">Monthly</option>
                   <option value="admission">Admission</option>
                   <option value="exam">Exam</option>
                   <option value="other">Other</option>
-                </select>
+                </Select>
               </div>
 
               {historyLoading ? (
@@ -208,7 +210,7 @@ export default function FeesPage() {
                               <button
                                 type="button"
                                 onClick={() => { setReceiptFee(fee); setReceiptOpen(true) }}
-                                className="text-gray-400 hover:text-gray-700 transition-colors"
+                                className="p-2 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
                                 title="View receipt"
                               >
                                 <Printer className="h-4 w-4" />
