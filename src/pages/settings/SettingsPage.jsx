@@ -576,10 +576,11 @@ const MODULE_LABELS = {
 }
 
 function PermissionMatrix({ roleId, currentPermissions, allModules, onSave, isSaving }) {
-  const [selected, setSelected] = useState(() => new Set(currentPermissions))
+  const normalize = (perms) => new Set(perms.map(p => p.split('.').slice(-2).join('.')))
+  const [selected, setSelected] = useState(() => normalize(currentPermissions))
 
   useEffect(() => {
-    setSelected(new Set(currentPermissions))
+    setSelected(normalize(currentPermissions))
   }, [currentPermissions.join(',')])
 
   const toggle = (perm) => setSelected((prev) => {
@@ -602,8 +603,9 @@ function PermissionMatrix({ roleId, currentPermissions, allModules, onSave, isSa
                 </td>
                 <td className="px-4 py-2.5">
                   <div className="flex flex-wrap gap-3">
-                    {actions.map((action) => {
-                      const perm = `${module}.${action}`
+                    {actions.map((rawAction) => {
+                      const action = rawAction.split('.').pop()
+                      const perm   = `${module}.${action}`
                       return (
                         <label key={perm} className="flex items-center gap-1.5 cursor-pointer select-none">
                           <input
