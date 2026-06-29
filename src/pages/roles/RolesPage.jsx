@@ -29,7 +29,8 @@ const MODULE_LABELS = {
 }
 
 function PermissionMatrix({ role, allPermissions, onSave, isSaving }) {
-  const initial = new Set(role.permissions)
+  const validPerms = new Set(Object.values(allPermissions).flat())
+  const initial = new Set(role.permissions.filter(p => validPerms.has(p)))
   const [checked, setChecked] = useState(initial)
   const isDirty = [...checked].sort().join() !== [...initial].sort().join()
 
@@ -166,8 +167,10 @@ export default function RolesPage() {
   const selectedRole    = roles.find((r) => r.id === selectedRoleId) ?? firstCustomRole ?? roles[0] ?? null
 
   const handleSavePermissions = async (permList) => {
+    const validPerms = new Set(Object.values(permissions).flat())
+    const filtered = permList.filter(p => validPerms.has(p))
     try {
-      await syncPermissions({ roleId: selectedRole.id, permissions: permList }).unwrap()
+      await syncPermissions({ roleId: selectedRole.id, permissions: filtered }).unwrap()
       toast.success('Permissions updated.')
     } catch (err) {
       toast.error(err?.data?.message ?? 'Failed to update permissions.')
