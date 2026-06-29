@@ -29,7 +29,11 @@ const MODULE_LABELS = {
 }
 
 function PermissionMatrix({ role, allPermissions, onSave, isSaving }) {
-  const validPerms = new Set(Object.values(allPermissions).flat())
+  const validPerms = new Set(
+    Object.entries(allPermissions).flatMap(([mod, actions]) =>
+      actions.map(a => `${mod}.${a.split('.').pop()}`)
+    )
+  )
   const initial = new Set(role.permissions.filter(p => validPerms.has(p)))
   const [checked, setChecked] = useState(initial)
   const isDirty = [...checked].sort().join() !== [...initial].sort().join()
@@ -51,9 +55,10 @@ function PermissionMatrix({ role, allPermissions, onSave, isSaving }) {
             {MODULE_LABELS[module] ?? module}
           </div>
           <div className="flex flex-wrap gap-2">
-            {actions.map((perm) => {
+            {actions.map((rawPerm) => {
+              const action    = rawPerm.split('.').pop()
+              const perm      = `${module}.${action}`
               const isChecked = checked.has(perm)
-              const action    = perm.split('.')[1]
               return (
                 <label
                   key={perm}
